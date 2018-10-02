@@ -44,11 +44,6 @@ namespace Core
         public bool DrawGameOverText = false;
         public bool DrawPressAnyKey = false;
         public int Score = 0;
-        public bool PickOut = false;
-        private int NumGroundTilesCreated = 0;
-        int NumArtifacts = 0;
-        bool LevelCompletePlayed = false;
-        public GameObject Pick;
 
         public World(Screen screen, Res res) : base(screen)
         {
@@ -57,10 +52,6 @@ namespace Core
             Levels.Add(new Level(1, 50, 100, 3, Res.SprHudLevel1, 1, 0));
             Levels.Add(new Level(2, 75, 200, 5, Res.SprHudLevel2, 2, 10));
             Levels.Add(new Level(3, 100, 300, 7, Res.SprHudLevel3, 3, 10));
-
-            Pick = new GameObject(this);
-
-            Pick.Frame = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
         }
         public void CreateColoredParticles(vec2 pos, List<Color> colors)
         {
@@ -98,7 +89,6 @@ namespace Core
             {
                 PlayTime += 5;
             }
-            //ScreenShake.Shake(3, 0.33f);
 
             Res.Audio.PlaySound(Res.SfxGetItem);
         }
@@ -125,6 +115,7 @@ namespace Core
             Player.Animate = true;
             Player.Pos = DigPiles[0].Pos;
             Player.Update(null, 0);
+
         }
 
         public void CreateParticles(ParticleParams pr)
@@ -286,7 +277,7 @@ namespace Core
                 }
             }
         }
-
+        private int NumGroundTilesCreated = 0;
         private void StepCaveGround(int x, int y)
         {
             List<Tile> tiles = GroundTiles[x];
@@ -347,8 +338,8 @@ namespace Core
                     throw new Exception("Bad guy not position wasn't set because ther were no ground tiles.");
                 }
 
-
                 b.Color = Color.White;
+
                 b.Update(null, 0);
                 BadGuys.Add(b);
             }
@@ -382,7 +373,7 @@ namespace Core
                 }
             }
         }
-
+        int NumArtifacts = 0;
         private void CreateArtifacts()
         {
             Artifacts = new List<Artifact>();
@@ -425,7 +416,6 @@ namespace Core
             }
             return found;
         }
-        private vec2 PickaxePoint = new vec2(0, 0);
 
         public override void Draw(SpriteBatch sb)
         {
@@ -466,43 +456,6 @@ namespace Core
                 }
             }
 
-            if (PickOut)
-            {
-                float r = 0;
-                vec2 dp = new vec2(0, 0);
-                vec2 origin = new vec2(6, 12);
-                 PickaxePoint = new vec2(0, 0);
-
-                if (Player.FacingDirection == Direction.Right)
-                {
-                    r = 0.5f;
-                    dp = new vec2(12, 6);
-                    PickaxePoint = Player.Pos + new vec2(12+8, 6);
-                }
-                else if(Player.FacingDirection== Direction.Up)
-                {
-                    r = 0;
-                    dp = new vec2(6, 0);
-                    PickaxePoint = Player.Pos + new vec2(6, -8);
-                }
-                else if(Player.FacingDirection == Direction.Down)
-                {
-                    r = 1.0f;
-                    dp = new vec2(6, 12);
-                    PickaxePoint = Player.Pos + new vec2(6, 12+8);
-                }
-                else if(Player.FacingDirection == Direction.Left)
-                {
-                    r = 1.5f;
-                    dp = new vec2(0, 6);
-                    PickaxePoint = Player.Pos + new vec2(-8, 6);
-                }
-                r = 3.14159267f * r;
-
-                Frame pa = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
-                Screen.DrawFrame(sb, pa, dp + Player.Pos, spriteWh, Color.White, 1, 1, r, origin);
-            }
-
             if (DrawNothingButChar == false)
             {
                 //Artifact the guy holds
@@ -521,9 +474,7 @@ namespace Core
                     foreach (Guy g in BadGuys)
                     {
                         if (g.Frame != null)
-                        {
                             Screen.DrawFrame(sb, g.Frame, g.Pos, spriteWh, g.Color);
-                        }
                     }
                 }
 
@@ -581,21 +532,17 @@ namespace Core
 
                 else if (GameState == GameState.LevelEnd)
                 {
-                    if (LevelCompletePlayed == false)
-                    {
-                        Res.Audio.PlaySound(Res.SfxLevelComplete);
-                        LevelCompletePlayed = true;
-                    }
                     vec2 pos = new vec2(), wh = new vec2();
                     CenterHudItem(0.7f, 0.2f, ref pos, ref wh);
                     DrawHudItem(sb, pos, wh, Res.SprHudSuccess);
                 }
             }
+
             if (GameState != GameState.Intro && GameState != GameState.ShowInstructions)
             {
                 float w = this.Screen.Game.GraphicsDevice.Viewport.Width;
-                float textx = w - w * 0.38f;
-                DrawStringHalo(sb, "Score:" +Score.ToString(), (int)textx, 1, Color.Fuchsia, Color.Yellow);
+                float textx = w - w * 0.15f;
+                DrawStringHalo(sb, Score.ToString(), (int)textx, 1, Color.White, Color.Yellow);
             }
 
             if (GameState == GameState.GameOver)
@@ -696,23 +643,14 @@ namespace Core
                             Res.Audio.PlaySound(Res.SfxCharHit);
 
                             ShowGameOver();
-                            ScreenShake.Shake(10);
+
                             break;
                         }
-
-                        if (g.CollidesWidth_Inclusive(PickaxePoint))
-                        {
-                            g.DeadTime = 3f;
-                        }
-                        g.DeadTime -= dt;
-                        if(g.DeadTime <= 0)
-                        {
-                            g.DeadTime = 0;
-                        }
-
                     }
                 }
+
             }
+
 
             ScreenShake.Update(dt);
 
@@ -730,12 +668,6 @@ namespace Core
             DrawNothingButChar = true;
             Res.Audio.PlaySound(Res.SfxDie);
         }
-
-        public float PickOutTimer = 0.6f;
-        public float PickOutTimerMax = 0.6f;
-        public float PickOutDelay = 0.0f;
-        public float PickOutDelayMax = 3.0f;
-
         public void UpdateGameState(float dt)
         {
             if (GameState == GameState.Intro)
@@ -773,30 +705,6 @@ namespace Core
                 {
                     PlayTime = 0;
                     ShowGameOver();
-                }
-
-                if (Keyboard.GetState().IsKeyDown(ActionKey))
-                {
-                    if (PickOutDelay <= 0.0001)
-                    {
-                        if (PickOut==false)
-                        {
-                            PickOut = true;
-                            PickOutTimer = PickOutTimerMax;
-                            Res.Audio.PlaySound(Res.SfxPickaxeOut);
-                        }
-                    }
-                }
-                PickOutTimer -= dt;
-                if(PickOutTimer <= 0)
-                {
-                    PickOutTimer = 0;
-                    PickOut = false;
-                }
-                PickOutDelay -= dt;
-                if(PickOutDelay <= 0)
-                {
-                    PickOutDelay = 0;
                 }
             }
             if (GameState == GameState.LevelEnd)
@@ -896,9 +804,6 @@ namespace Core
     {
         GraphicsDeviceManager graphics;
         GameScreen GameScreen;
-
-
-
         Screen _objCurScreen = null;
         GameData GameData;
 
@@ -916,53 +821,15 @@ namespace Core
         {
             GameSystem = gs;
 
-
-
             GameData = new GameData(this);
             GameData.Load();
 
             graphics.IsFullScreen = bFullscreen;
-
-
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             graphics.ApplyChanges();
 
             Window.Title = "Eggsplorer";
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         public MainGame()
         {
@@ -1018,25 +885,12 @@ namespace Core
                         GameScreen.Init(this);
                     }
 
-
-
-
-
-
-
-
-
-
-
-
                     _objCurScreen = GameScreen;
                 }
                 else if (ShowScreen == ShowScreen.Battle)
                 {
 
-                    //
-
-
+                   //
                 }
 
                 ShowScreen = ShowScreen.None;

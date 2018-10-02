@@ -13,7 +13,6 @@ namespace Core
         public Audio Audio { get; private set; }
         public Tiles Tiles { get; private set; }
         public SpriteFont Font { get; private set; }
-        public SpriteFont Font2 { get; private set; }
         ContentManager Content;
 
         public string SprDirt = "SprDirt";
@@ -33,6 +32,7 @@ namespace Core
         public string SprDinoD = "SprDinoD";
         public string SprDinoL = "SprDinoL";
         public string SprDinoR = "SprDinoR";
+        public string SprDinoDead = "SprDinoDead";
 
         public string SprHudTitle = "SprHudTitle";
         public string SprHudLevel1 = "SprHudLevel1";
@@ -46,7 +46,6 @@ namespace Core
         public string SprHudInstructions = "SprHudInstructions";
         public string SprHudInstructionsWithOk = "SprHudInstructionsWithOk";
         public string SprParticle = "SprParticle";
-
 
         public string SprArtifactBone1 = "SprArtifactBone1";
         public string SprArtifactBone2 = "SprArtifactBone2";
@@ -66,6 +65,7 @@ namespace Core
         public string SfxLevelComplete = "LevelComplete";
         public string SfxUncoverItem = "UncoverItem";
         public string SfxCharHit = "CharHit";
+        public string SfxPickaxeOut = "PickaxeOut";
 
         public const float guySpeed = 0.6f;
 
@@ -79,8 +79,6 @@ namespace Core
         public void Load(GraphicsDevice d)
         {
             Font = Content.Load<SpriteFont>("Font");
-            Font2 = Content.Load<SpriteFont>("Font2");
-
             Tiles.Texture = Content.Load<Texture2D>("monsters-12x12"); ;
 
             Tiles.AddSprite(SprPickaxe, new List<Rectangle>() { new Rectangle(3, 0, 1, 1) }, 0f);
@@ -116,6 +114,8 @@ namespace Core
             Tiles.AddSprite(SprArtifactEgg1, new List<Rectangle>() { new Rectangle(2, 8, 1, 1) }, 0);
             Tiles.AddSprite(SprArtifactEgg2, new List<Rectangle>() { new Rectangle(2, 9, 1, 1) }, 0);
             Tiles.AddSprite(SprArtifactEgg3, new List<Rectangle>() { new Rectangle(2, 10, 1, 1) }, 0);
+
+            Tiles.AddSprite(SprDinoDead, new List<Rectangle>() { new Rectangle(1, 9, 1, 1) }, 0);
 
             Tiles.AddSprite(SprCharDie, new List<Rectangle>() {
 
@@ -165,6 +165,7 @@ namespace Core
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxLevelComplete));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxUncoverItem));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxCharHit));
+            Audio.Sounds.Add(Content.Load<SoundEffect>(SfxPickaxeOut));
         }
 
         private void CharBlock12(ivec2 a, string u, string d, string l, string r)

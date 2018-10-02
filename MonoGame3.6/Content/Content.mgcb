@@ -1,7 +1,7 @@
 
 #----------------------------- Global Properties ----------------------------#
 
-/outputDir:bin/$(Platform)
+/outputDir:../bin/Windows/x86/Debug/Content
 /intermediateDir:obj/$(Platform)
 /platform:Windows
 /config:
@@ -37,11 +37,6 @@
 /processorParam:Quality=Best
 /build:UncoverItem.ogg
 
-#begin PressStart2P-Regular.ttf
-/importer:
-/processor:
-/build:PressStart2P-Regular.ttf
-
 #begin nice.ogg
 /importer:OggImporter
 /processor:SoundEffectProcessor
@@ -65,11 +60,6 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:LevelComplete.ogg
-
-#begin Lato-Regular.ttf
-/importer:
-/processor:
-/build:Lato-Regular.ttf
 
 #begin land.ogg
 /importer:OggImporter
@@ -100,24 +90,6 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:GetItem.ogg
-
-#begin get.ogg
-/importer:OggImporter
-/processor:SoundEffectProcessor
-/processorParam:Quality=Best
-/build:get.ogg
-
-#begin Gaegu-Regular.ttf
-/importer:
-/processor:
-/build:Gaegu-Regular.ttf
-
-#begin Font2.spritefont
-/importer:FontDescriptionImporter
-/processor:FontDescriptionProcessor
-/processorParam:PremultiplyAlpha=True
-/processorParam:TextureFormat=Compressed
-/build:Font2.spritefont
 
 #begin Font.spritefont
 /importer:FontDescriptionImporter
@@ -161,4 +133,10 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:CharHit.ogg
+
+#begin PickaxeOut.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:PickaxeOut.ogg
 

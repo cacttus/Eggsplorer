@@ -11,7 +11,7 @@ namespace Core
     {
         public float speed = 48f;
         private vec2 LastAlignTilePos;
-        private Direction FacingDirection = Direction.Down;
+        public Direction FacingDirection { get; set; } = Direction.Down;
         private Direction NextDirection = Direction.Down;
         private bool AlignActionsHaveRun = false;
         public AIType AIType = AIType.Player;
@@ -24,6 +24,7 @@ namespace Core
         public string SpriteRight;
 
         public float AiNextTurn = 1000;
+        public float DeadTime = 0;
 
         private new World World;
         public Guy(World w, string l, string r, string u, string d) : base(w)
@@ -180,40 +181,49 @@ namespace Core
         }
         private void ChangeDirection(float dt)
         {
-            if (DoesNeighborPosHaveTile(NextDirection))
+            if (DeadTime <= 0.0001)
             {
-                if (NextDirection == Direction.Left)
+
+                if (DoesNeighborPosHaveTile(NextDirection))
                 {
-                    LastDirection = FacingDirection;
-                    FacingDirection = Direction.Left;
-                    Animate = true;
-                    Vel = new vec2(-speed, 0) * dt;
-                    Sprite = World.Res.Tiles.GetSprite(SpriteLeft);
+                    if (NextDirection == Direction.Left)
+                    {
+                        LastDirection = FacingDirection;
+                        FacingDirection = Direction.Left;
+                        Animate = true;
+                        Vel = new vec2(-speed, 0) * dt;
+                        Sprite = World.Res.Tiles.GetSprite(SpriteLeft);
+                    }
+                    else if (NextDirection == Direction.Right)
+                    {
+                        LastDirection = FacingDirection;
+                        FacingDirection = Direction.Right;
+                        Animate = true;
+                        Vel = new vec2(speed, 0) * dt;
+                        Sprite = World.Res.Tiles.GetSprite(SpriteRight);
+                    }
+                    else if (NextDirection == Direction.Up)
+                    {
+                        LastDirection = FacingDirection;
+                        FacingDirection = Direction.Up;
+                        Animate = true;
+                        Vel = new vec2(0, -speed) * dt;
+                        Sprite = World.Res.Tiles.GetSprite(SpriteUp);
+                    }
+                    else if (NextDirection == Direction.Down)
+                    {
+                        LastDirection = FacingDirection;
+                        FacingDirection = Direction.Down;
+                        Animate = true;
+                        Vel = new vec2(0, speed) * dt;
+                        Sprite = World.Res.Tiles.GetSprite(SpriteDown);
+                    }
                 }
-                else if (NextDirection == Direction.Right)
-                {
-                    LastDirection = FacingDirection;
-                    FacingDirection = Direction.Right;
-                    Animate = true;
-                    Vel = new vec2(speed, 0) * dt;
-                    Sprite = World.Res.Tiles.GetSprite(SpriteRight);
-                }
-                else if (NextDirection == Direction.Up)
-                {
-                    LastDirection = FacingDirection;
-                    FacingDirection = Direction.Up;
-                    Animate = true;
-                    Vel = new vec2(0, -speed) * dt;
-                    Sprite = World.Res.Tiles.GetSprite(SpriteUp);
-                }
-                else if (NextDirection == Direction.Down)
-                {
-                    LastDirection = FacingDirection;
-                    FacingDirection = Direction.Down;
-                    Animate = true;
-                    Vel = new vec2(0, speed) * dt;
-                    Sprite = World.Res.Tiles.GetSprite(SpriteDown);
-                }
+            }
+            else
+            {
+                Sprite = World.Res.Tiles.GetSprite(World.Res.SprDinoDead);
+                if(Sprite.Frames.Count>0) Frame = Sprite.Frames[0];
             }
         }
         private List<T> Permute<T>(List<T> stuff, int count)
@@ -262,7 +272,7 @@ namespace Core
                 World.Res.Audio.PlaySound(World.Res.SfxUncoverItem);
                 float pi = (float)Math.PI;
 
-                if(pileUnderChar.Artifact == null)
+                if (pileUnderChar.Artifact == null)
                 {
                     World.Score += 10;
                 }
