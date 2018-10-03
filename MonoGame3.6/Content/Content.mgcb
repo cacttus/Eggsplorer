@@ -152,3 +152,9 @@
 /processorParam:Quality=Best
 /build:HitGuy.ogg
 
+#begin PickaxeSwing.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:PickaxeSwing.ogg
+
