@@ -294,7 +294,6 @@ namespace Core
             if (pileUnderChar != null)
             {
                 World.DigPiles.Remove(pileUnderChar);
-                World.Res.Audio.PlaySound(World.Res.SfxUncoverItem);
                 float pi = (float)Math.PI;
 
                 if (pileUnderChar.Artifact == null)
@@ -328,6 +327,10 @@ namespace Core
                     {
                         Artifacts.Add(pileUnderChar.Artifact);
                     }
+                }
+                else
+                {
+                    World.Res.Audio.PlaySound(World.Res.SfxUncoverItem);
                 }
             }
 

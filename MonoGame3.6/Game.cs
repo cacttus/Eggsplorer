@@ -90,6 +90,7 @@ namespace Core
 
             if (a.ArtifactType == ArtifactType.Pickaxe)
             {
+                Res.Audio.PlaySound(Res.SfxGetPickaxe);
                 PickaxeUsage++;
                 CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.Gray, Color.SlateBlue});
             }
@@ -113,14 +114,21 @@ namespace Core
                 {
                     PlayTime += 5;//5s
                 }
+                Res.Audio.PlaySound(Res.SfxGetItem);
             }
 
-            Res.Audio.PlaySound(Res.SfxGetItem);
         }
 
-        public void StartGame(int levelNumber)
+        public void StartGame(int levelNumber, bool playIntro=false)
         {
-            GameState = GameState.LevelStart;
+            if (playIntro)
+            {
+                GameState = GameState.Intro;
+            }
+            else
+            {
+                GameState = GameState.LevelStart;
+            }
 
             PickOutDelay = 0;
             PickOutTimer = 0;
@@ -733,6 +741,7 @@ namespace Core
                             if (g.CollidesWidth_Inclusive(PickaxePoint))
                             {
                                 g.Stunned = 3f;
+                                Res.Audio.PlaySound(Res.SfxHitGuy);
                             }
                         }
 
@@ -905,7 +914,7 @@ namespace Core
         {
             base.Init(game);
             World = new World(this, (game as MainGame).Res);
-            World.StartGame(0);
+            World.StartGame(0, true);
 
         }
         public override void Update(float dt)
@@ -925,9 +934,6 @@ namespace Core
     {
         GraphicsDeviceManager graphics;
         GameScreen GameScreen;
-
-
-
         Screen _objCurScreen = null;
         GameData GameData;
 
@@ -954,36 +960,6 @@ namespace Core
 
             Window.Title = "Eggsplorer";
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1043,33 +1019,15 @@ namespace Core
                         GameScreen.Init(this);
                     }
 
-
-
-
-
-
-
-
-
-
-
-
                     _objCurScreen = GameScreen;
                 }
                 else if (ShowScreen == ShowScreen.Battle)
                 {
-
-                    //
-
-
                 }
-
                 ShowScreen = ShowScreen.None;
             }
             else
             {
-                GameSystem.HideNav();
-                wait += dt;
             }
 
             if (_objCurScreen != null)
@@ -1080,7 +1038,6 @@ namespace Core
             if (Input.Global.TouchState == TouchState.Press || Input.Global.TouchState == TouchState.Release)
             {
                 GameSystem.HideNav();
-
             }
 
             if (Keyboard.GetState().IsKeyDown(Keys.Escape))

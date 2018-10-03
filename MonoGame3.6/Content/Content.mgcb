@@ -81,7 +81,7 @@
 
 #begin Intro.ogg
 /importer:OggImporter
-/processor:SoundEffectProcessor
+/processor:SongProcessor
 /processorParam:Quality=Best
 /build:Intro.ogg
 
@@ -140,9 +140,15 @@
 /processorParam:Quality=Best
 /build:PickaxeOut.ogg
 
-#begin PickaxeSwing.ogg
+#begin GetPickaxe.ogg
 /importer:OggImporter
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
-/build:PickaxeSwing.ogg
+/build:GetPickaxe.ogg
+
+#begin HitGuy.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:HitGuy.ogg
 

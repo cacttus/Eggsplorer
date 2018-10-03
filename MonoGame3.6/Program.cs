@@ -106,6 +106,7 @@ namespace Core
 
             using (var game = new MainGame())
             {
+                
                 game.Init(true, new DesktopGameSystem(game));
                 game.Run();
             }

@@ -16,7 +16,7 @@ namespace Core
         public Platform Platform { get; protected set; } = Platform.Android;
         public Action ExitAction { get; protected set; } = null;
         public Input Input { get; private set; }
-        public GameBase() {
+        public GameBase() { 
             Input = new Input();
         }
         public void Update(float dt) {
