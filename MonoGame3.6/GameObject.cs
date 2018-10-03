@@ -70,8 +70,8 @@ namespace Core
             //Grid REct
             float l = Pos.x; ;// * World.Tiles.SpriteWidth;
             float t = Pos.y; ;// * World.Tiles.SpriteWidth;
-            float r = l + 1;
-            float b = t + 1;
+            float r = l + 12;
+            float b = t + 12;
             if (point.x >= l && point.x <= r && point.y >= t && point.y <= b)
             {
                 return true;

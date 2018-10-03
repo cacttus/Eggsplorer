@@ -140,3 +140,9 @@
 /processorParam:Quality=Best
 /build:PickaxeOut.ogg
 
+#begin PickaxeSwing.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:PickaxeSwing.ogg
+

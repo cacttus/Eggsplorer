@@ -32,6 +32,7 @@ namespace Core
         Bone7,//6
         Egg1,//7
         Egg2,//8
+        Pickaxe,//9
     }
 
     public enum GameState
@@ -47,6 +48,7 @@ namespace Core
     public class Tile : GameObject
     {
         public Tile(World w) : base(w) { }
+        public DigPile Pile;
     }
 
     
@@ -55,13 +57,14 @@ namespace Core
         public int NumCarveSteps = 100;
         public int Gridsize = 50;
         public int NumBones = 3;
+        public int NumPickaxes = 1;
         public int NumBadGuys = 1;
         public ivec2 eggpos = new ivec2(0, 0);
         public string LevelSpriteName { get; private set; }
         public int Number = 0;
         public float TimeBonus = 0;
 
-        public Level(int number, int gridsize, int steps, int bones, string spriteName, int numbadguys, float timeBon)
+        public Level(int number, int gridsize, int steps, int bones, string spriteName, int numbadguys, float timeBon, int numPickaxes)
         {
             TimeBonus = timeBon;
             Number = number;
@@ -70,6 +73,7 @@ namespace Core
             NumBones = bones;
             LevelSpriteName = spriteName;
             NumBadGuys = numbadguys;
+            NumPickaxes = numPickaxes;
         }
     }
 
@@ -132,6 +136,7 @@ namespace Core
             else if ( ArtifactType == ArtifactType.Bone7) { spriteName = (w as World).Res.SprArtifactBone7; }
             else if ( ArtifactType == ArtifactType.Egg1) { spriteName =  (w as World).Res.SprArtifactEgg1; }
             else if ( ArtifactType == ArtifactType.Egg2) { spriteName =  (w as World).Res.SprArtifactEgg2; }
+            else if ( ArtifactType == ArtifactType.Pickaxe) { spriteName =  (w as World).Res.SprPickaxe; }
             else
             {
                 throw new NotImplementedException();

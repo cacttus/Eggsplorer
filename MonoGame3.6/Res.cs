@@ -58,6 +58,7 @@ namespace Core
         public string SprArtifactEgg2 = "SprArtifactEgg2";
         public string SprArtifactEgg3 = "SprArtifactEgg3";
         public string SprCharDie = "SprCharDie";
+        public string SprDinoStun = "SprDinoStun";
 
         public string SfxIntro = "Intro";
         public string SfxDie = "Die";
@@ -66,6 +67,7 @@ namespace Core
         public string SfxUncoverItem = "UncoverItem";
         public string SfxCharHit = "CharHit";
         public string SfxPickaxeOut = "PickaxeOut";
+        public string SfxPickaxeSwing = "PickaxeSwing";
 
         public const float guySpeed = 0.6f;
 
@@ -98,10 +100,9 @@ namespace Core
             Tiles.AddSprite(SprHudSuccess, new List<Rectangle>() { new Rectangle(4, 8, 8, 2) }, 0);
 
             Tiles.AddSprite(SprParticle, new List<Rectangle>() { new Rectangle(1, 11, 1, 1) }, 0);
-
+            Tiles.AddSprite(SprDinoStun, new List<Rectangle>() { new Rectangle(1, 9, 1, 1), new Rectangle(1, 10, 1, 1) }, .8f);
 
             Tiles.AddSprite(SprArtifactGem, new List<Rectangle>() { new Rectangle(0, 11, 1, 1) }, 0);
-
             Tiles.AddSprite(SprHudPressAnyKey, new List<Rectangle>() { new Rectangle(10, 12, 8, 1) },0);
 
             Tiles.AddSprite(SprArtifactBone1, new List<Rectangle>() { new Rectangle(3, 1, 1, 1) }, 0);

@@ -45,18 +45,19 @@ namespace Core
         public bool DrawPressAnyKey = false;
         public int Score = 0;
         public bool PickOut = false;
-        private int NumGroundTilesCreated = 0;
         int NumArtifacts = 0;
+        int NumPickaxes = 0;
         bool LevelCompletePlayed = false;
         public GameObject Pick;
+        private int PickaxeUsage = 1;
 
         public World(Screen screen, Res res) : base(screen)
         {
             Res = res;
 
-            Levels.Add(new Level(1, 50, 100, 3, Res.SprHudLevel1, 1, 0));
-            Levels.Add(new Level(2, 75, 200, 5, Res.SprHudLevel2, 2, 10));
-            Levels.Add(new Level(3, 100, 300, 7, Res.SprHudLevel3, 3, 10));
+            Levels.Add(new Level(1, 50, 100, 3, Res.SprHudLevel1, 1, 0, 1));
+            Levels.Add(new Level(2, 75, 200, 5, Res.SprHudLevel2, 2, 10, 2));
+            Levels.Add(new Level(3, 100, 300, 7, Res.SprHudLevel3, 3, 10, 3));
 
             Pick = new GameObject(this);
 
@@ -83,28 +84,50 @@ namespace Core
         }
         public void FindArtifact(Artifact a)
         {
+            //show above player head
             FoundArtifact = a;
             FoundArtifactMoveTimer = FoundArtifactMoveTimerMax;
-            CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.White, Color.LightYellow });
 
-            NumArtifacts--;
-
-            if (NumArtifacts==0 )
+            if (a.ArtifactType == ArtifactType.Pickaxe)
             {
-                GameState = GameState.LevelEnd;
-                LevelEndTextTimer = LevelEndTextTimerMax;
+                PickaxeUsage++;
+                CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.Gray, Color.SlateBlue});
             }
             else
             {
-                PlayTime += 5;
+                CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.White, Color.LightYellow });
+
+                NumArtifacts--;
+
+                //foreach(Guy b in this.BadGuys)
+                //{
+                //    b.Stunned = 3.0f;
+                //}
+
+                if (NumArtifacts == 0)
+                {
+                    GameState = GameState.LevelEnd;
+                    LevelEndTextTimer = LevelEndTextTimerMax;
+                }
+                else
+                {
+                    PlayTime += 5;//5s
+                }
             }
-            //ScreenShake.Shake(3, 0.33f);
 
             Res.Audio.PlaySound(Res.SfxGetItem);
         }
 
         public void StartGame(int levelNumber)
         {
+            GameState = GameState.LevelStart;
+
+            PickOutDelay = 0;
+            PickOutTimer = 0;
+            PickOut = false;
+
+            LevelStartTextTimer = LevelStartTextTimerMax;
+
             if (levelNumber >= Levels.Count)
             {
                 levelNumber = 0;
@@ -114,17 +137,37 @@ namespace Core
 
             IntroTimer = IntroTimerMax;
 
+
+
             //Main Setup stuff
             MakeTileGrid();
             CreateCaveGround();
             CreateDigPiles();
+
+            Player = new Guy(this, Res.SprPasPasLeft, Res.SprPasPasRight, Res.SprPasPasUp, Res.SprPasPasDown, Res.SprPasPasDown);
+            Player.Animate = true;
+
+            //Place Player in empty tile
+            Tile found = null;
+            for(int i=0; i<5000; ++i)
+            {
+                Tile t = CaveGround[Globals.RandomInt(0, CaveGround.Count)];
+                if (t.Pile == null)
+                {
+                    found = t;
+                }
+            }
+            if (found == null)
+            {
+                found = CaveGround[0];
+            }
+            Player.Pos = found.Pos;
+            Player.Update(null, 0);
+
             CreateArtifacts();
             CreateBadGuys();
 
-            Player = new Guy(this, Res.SprPasPasLeft, Res.SprPasPasRight, Res.SprPasPasUp, Res.SprPasPasDown);
-            Player.Animate = true;
-            Player.Pos = DigPiles[0].Pos;
-            Player.Update(null, 0);
+
         }
 
         public void CreateParticles(ParticleParams pr)
@@ -264,13 +307,15 @@ namespace Core
             }
         }
 
+        private List<Tile> CaveGround;
         private void CreateCaveGround()
         {
+            CaveGround = new List<Tile>();
+
             int steps = CurLevel.NumCarveSteps;
             int x = GridWidth / 2;
             int y = GridHeight / 2;
             Random rand = new Random();
-            NumGroundTilesCreated = 0;
 
             for (int i = 0; i < steps; i++)
             {
@@ -297,17 +342,16 @@ namespace Core
                 t.Frame = Res.Tiles.GetSpriteFrame(Res.SprDirt, 0);
                 t.Pos = new vec2(x * 12, y * 12);
                 tiles[y] = t;
-                NumGroundTilesCreated++;
+                CaveGround.Add(t);
             }
         }
-
 
         private void CreateBadGuys()
         {
             BadGuys = new List<Guy>();
             for (int i = 0; i < CurLevel.NumBadGuys; ++i)
             {
-                Guy b = new Guy(this, Res.SprDinoL, Res.SprDinoR, Res.SprDinoU, Res.SprDinoD);
+                Guy b = new Guy(this, Res.SprDinoL, Res.SprDinoR, Res.SprDinoU, Res.SprDinoD, Res.SprDinoStun);
                 b.speed = 22 + 10 * CurLevel.Number;
 
                 if (CurLevel.Number > 1)
@@ -320,31 +364,16 @@ namespace Core
                 }
 
                 //Place bad guy
-                bool bSet = false;
-                int a = Globals.RandomInt(0, NumGroundTilesCreated);
-                for (int x = 0; x < GridWidth; ++x)
+                for(int n=0; n<5000; ++n)
                 {
-                    for (int y = 0; y < GridHeight; ++y)
+                    int a = Globals.RandomInt(0, CaveGround.Count);
+                    b.Pos = CaveGround[a].Pos;
+                     
+                    //Make sure we aren't too close to player
+                    if((b.Pos-Player.Pos).Len() > 24)
                     {
-                        if (GroundTiles[x][y] != null)
-                        {
-                            a--;
-                            if (a == 0)
-                            {
-                                b.Pos = GroundTiles[x][y].Pos;
-                                bSet = true;
-                                break;
-                            }
-                        }
-
+                        break;
                     }
-                    if (bSet) { break; }
-                }
-
-                if (bSet == false)
-                {
-                    //**ERROR: possition of bad guy not set.
-                    throw new Exception("Bad guy not position wasn't set because ther were no ground tiles.");
                 }
 
 
@@ -376,6 +405,7 @@ namespace Core
                             DigPile newPile = new DigPile(this, i, j);
                             newPile.Frame = Res.Tiles.GetSpriteFrame(Res.SprDigPile, 0);
                             newPile.Pos = new vec2(tile.Pos.x, tile.Pos.y);
+                            tile.Pile = newPile;
                             DigPiles.Add(newPile);
                         }
                     }
@@ -389,6 +419,8 @@ namespace Core
             DigPile found;
             Artifact art;
             NumArtifacts = 0;
+            NumPickaxes = 0;
+
             //Create Bones
             for (int i = 0; i < CurLevel.NumBones; ++i)
             {
@@ -399,9 +431,18 @@ namespace Core
                 found.Frame = Res.Tiles.GetSpriteFrame(Res.SprArtifactGem, 0);
 
                 NumArtifacts++;
-
             }
+            for (int i = 0; i < CurLevel.NumPickaxes; ++i)
+            {
+                art = new Artifact(this, ArtifactType.Pickaxe);
+                Artifacts.Add(art);
 
+                found = FindEmptyPile();
+                found.Artifact = art;
+                found.Frame = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
+
+                NumPickaxes++;
+            }
             //Create Dino Egg
             art = new Artifact(this, (ArtifactType)Globals.RandomInt(7, 9));
             Artifacts.Add(art);
@@ -468,39 +509,20 @@ namespace Core
 
             if (PickOut)
             {
-                float r = 0;
-                vec2 dp = new vec2(0, 0);
-                vec2 origin = new vec2(6, 12);
-                 PickaxePoint = new vec2(0, 0);
+                //float r = 0;//rotationradians
+                vec2 dp = new vec2(0, 0); //sprite origin relative to 12x12 sprite  and player
+                vec2 pickaxeOrigin = new vec2(6, 12);
+                PickaxePoint = new vec2(0, 0);
 
-                if (Player.FacingDirection == Direction.Right)
-                {
-                    r = 0.5f;
-                    dp = new vec2(12, 6);
-                    PickaxePoint = Player.Pos + new vec2(12+8, 6);
-                }
-                else if(Player.FacingDirection== Direction.Up)
-                {
-                    r = 0;
-                    dp = new vec2(6, 0);
-                    PickaxePoint = Player.Pos + new vec2(6, -8);
-                }
-                else if(Player.FacingDirection == Direction.Down)
-                {
-                    r = 1.0f;
-                    dp = new vec2(6, 12);
-                    PickaxePoint = Player.Pos + new vec2(6, 12+8);
-                }
-                else if(Player.FacingDirection == Direction.Left)
-                {
-                    r = 1.5f;
-                    dp = new vec2(0, 6);
-                    PickaxePoint = Player.Pos + new vec2(-8, 6);
-                }
-                r = 3.14159267f * r;
+                float a = ((PickOutTimerMax - PickOutTimer) / PickOutTimerMax) * 3.1415927f * 2;
+                vec2 playerOrigin = Player.Pos + new vec2(6, 6);
+                vec2 pickaxeNormal = new vec2((float)Math.Cos(a), (float)Math.Sin(a));
+                vec2 pickaxePos = playerOrigin + pickaxeNormal * 6.0f;
+
+                PickaxePoint = playerOrigin + pickaxeNormal * 13.0f;
 
                 Frame pa = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
-                Screen.DrawFrame(sb, pa, dp + Player.Pos, spriteWh, Color.White, 1, 1, r, origin);
+                Screen.DrawFrame(sb, pa, pickaxePos, spriteWh, Color.White, 1, 1, a + (3.1415927f*0.5f), pickaxeOrigin);
             }
 
             if (DrawNothingButChar == false)
@@ -510,7 +532,7 @@ namespace Core
                 {
                     vec2 pos = Player.Pos;
 
-                    pos.y -= 5 + 12 * (FoundArtifactMoveTimer / FoundArtifactMoveTimerMax);
+                    pos.y -= 5 + 12 * ((FoundArtifactMoveTimerMax-FoundArtifactMoveTimer) / FoundArtifactMoveTimerMax);
 
                     Screen.DrawFrame(sb, FoundArtifact.Frame, FoundArtifact.Pos, spriteWh, FoundArtifact.Color);
                 }
@@ -594,8 +616,13 @@ namespace Core
             if (GameState != GameState.Intro && GameState != GameState.ShowInstructions)
             {
                 float w = this.Screen.Game.GraphicsDevice.Viewport.Width;
+                float h = this.Screen.Game.GraphicsDevice.Viewport.Height;
                 float textx = w - w * 0.38f;
                 DrawStringHalo(sb, "Score:" +Score.ToString(), (int)textx, 1, Color.Fuchsia, Color.Yellow);
+
+                float paw = w - w * 0.08f ;
+                DrawHudItem(sb, new vec2(Screen.Viewport.WidthPixels - 22, Screen.Viewport.HeightPixels - 12), new vec2(12, 12), Res.SprPickaxe,0.5f);
+                DrawStringHalo(sb, "x" + PickaxeUsage.ToString(), (int)(paw), (int) h-32, Color.Blue, Color.Orange);
             }
 
             if (GameState == GameState.GameOver)
@@ -618,10 +645,7 @@ namespace Core
 
                     DrawHudItem(sb, pos, wh, Res.SprHudPressAnyKey);
                 }
-
-
             }
-
         }
 
         public void CenterHudItem(float pctWidth, float pctHeight, ref vec2 pos, ref vec2 wh)
@@ -690,24 +714,26 @@ namespace Core
                         //Player Die
                         if (g.CollidesWith(Player))
                         {
-                            vec2 pos = g.GetCenter() + (Player.GetCenter() - g.GetCenter()) * 0.5f;
-                            CreateColoredParticles(pos, new List<Color> { Color.Red, Color.IndianRed, Color.HotPink });
+                            if(g.Stunned <= 0)
+                            {
+                                vec2 pos = g.GetCenter() + (Player.GetCenter() - g.GetCenter()) * 0.5f;
+                                CreateColoredParticles(pos, new List<Color> { Color.Red, Color.IndianRed, Color.HotPink });
 
-                            Res.Audio.PlaySound(Res.SfxCharHit);
+                                Res.Audio.PlaySound(Res.SfxCharHit);
 
-                            ShowGameOver();
-                            ScreenShake.Shake(10);
-                            break;
+                                ShowGameOver();
+                                ScreenShake.Shake(10);
+                                break;
+                            }
+
                         }
 
-                        if (g.CollidesWidth_Inclusive(PickaxePoint))
+                        if (PickOut)
                         {
-                            g.DeadTime = 3f;
-                        }
-                        g.DeadTime -= dt;
-                        if(g.DeadTime <= 0)
-                        {
-                            g.DeadTime = 0;
+                            if (g.CollidesWidth_Inclusive(PickaxePoint))
+                            {
+                                g.Stunned = 3f;
+                            }
                         }
 
                     }
@@ -731,8 +757,8 @@ namespace Core
             Res.Audio.PlaySound(Res.SfxDie);
         }
 
-        public float PickOutTimer = 0.6f;
-        public float PickOutTimerMax = 0.6f;
+        public float PickOutTimer = 0.3f;
+        public float PickOutTimerMax = 0.3f;
         public float PickOutDelay = 0.0f;
         public float PickOutDelayMax = 3.0f;
 
@@ -764,7 +790,7 @@ namespace Core
                 {
                     GameState = GameState.LevelPlay;
                 }
-            };
+            }
             if (GameState == GameState.LevelPlay)
             {
                 PlayTime -= dt;
@@ -777,15 +803,20 @@ namespace Core
 
                 if (Keyboard.GetState().IsKeyDown(ActionKey))
                 {
-                    if (PickOutDelay <= 0.0001)
+                    if (PickaxeUsage > 0)
                     {
-                        if (PickOut==false)
+                        if (PickOutDelay <= 0.0001)
                         {
-                            PickOut = true;
-                            PickOutTimer = PickOutTimerMax;
-                            Res.Audio.PlaySound(Res.SfxPickaxeOut);
+                            if (PickOut == false)
+                            {
+                                PickOut = true;
+                                PickOutTimer = PickOutTimerMax;
+                                Res.Audio.PlaySound(Res.SfxPickaxeSwing);
+                                PickaxeUsage--;
+                            }
                         }
                     }
+
                 }
                 PickOutTimer -= dt;
                 if(PickOutTimer <= 0)
@@ -804,7 +835,6 @@ namespace Core
                 LevelEndTextTimer -= dt;
                 if (LevelEndTextTimer <= 0)
                 {
-                    GameState = GameState.LevelStart;
                     StartGame(CurLevel.Number);//We're passing azero based number here so curlevel.Number is Level # + 1
                 }
             }
@@ -838,9 +868,8 @@ namespace Core
         {
             //Start New Game
             Score = 0;
+            PickaxeUsage = 1;
             PlayTime = PlayTimeMax;
-            GameState = GameState.LevelStart;
-            LevelStartTextTimer = LevelStartTextTimerMax;
             StartGame(0);
         }
         public void UpdateViewport(float dt)
@@ -915,15 +944,11 @@ namespace Core
         public void Init(bool bFullscreen, GameSystem gs)
         {
             GameSystem = gs;
-
-
-
             GameData = new GameData(this);
             GameData.Load();
 
-            graphics.IsFullScreen = bFullscreen;
-
-
+            //TODO: reset this for winnitron derek 10/2/18
+            graphics.IsFullScreen =  false;
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             graphics.ApplyChanges();
 

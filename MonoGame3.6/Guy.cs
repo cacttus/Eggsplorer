@@ -22,12 +22,13 @@ namespace Core
         public string SpriteUp;
         public string SpriteDown;
         public string SpriteRight;
+        public string SpriteStun;
 
         public float AiNextTurn = 1000;
-        public float DeadTime = 0;
+        public float Stunned = 0;
 
         private new World World;
-        public Guy(World w, string l, string r, string u, string d) : base(w)
+        public Guy(World w, string l, string r, string u, string d, string stun) : base(w)
         {
             LastAlignTilePos = Pos;
             World = w;
@@ -36,6 +37,7 @@ namespace Core
             SpriteRight = r;
             SpriteUp = u;
             SpriteDown = d;
+            SpriteStun = stun;
 
             Sprite = World.Res.Tiles.GetSprite(d);
         }
@@ -50,105 +52,132 @@ namespace Core
             base.Update(inp, dt, physics);
             World world = (World as World);
 
-
             if (World.GameState != GameState.GameOver)
             {
-                if (AIType == AIType.Player)
+                if (Stunned <= 0)
                 {
-                    if (KeyDown(Keys.Left) || KeyDown(Keys.A))
+                    if (AIType == AIType.Player)
                     {
-                        NextDirection = Direction.Left;
-                    }
-                    if (KeyDown(Keys.Right) || KeyDown(Keys.D))
-                    {
-                        NextDirection = Direction.Right;
-                    }
-                    if (KeyDown(Keys.Down) || KeyDown(Keys.S))
-                    {
-                        NextDirection = Direction.Down;
-                    }
-                    if (KeyDown(Keys.Up) || KeyDown(Keys.W))
-                    {
-                        NextDirection = Direction.Up;
-                    }
-                }
-                else
-                {
-                    AiNextTurn -= dt;
-                    if (AiNextTurn <= 0)
-                    {
-                        AiNextTurn = Globals.RandomInt(2000, 4000);
-
-                        PickNewDirection();
-                    }
-                }
-
-                //We are aligned with tile.
-                if (CheckAlignedTile())
-                {
-                    //Change to user direct
-                    ChangeDirection(dt);
-
-                    if (AlignActionsHaveRun == false)
-                    {
-                        //Set the last aligned tile pos - this is an escape check
-                        LastAlignTilePos = (World as World).RoundPosToTilePos(Pos);
-
-                        if (AIType == AIType.Player)
+                        if (KeyDown(Keys.Left) || KeyDown(Keys.A))
                         {
-                            CollidePiles();
+                            NextDirection = Direction.Left;
                         }
-
-                        AlignActionsHaveRun = true;
-                    }
-
-                    if (DoesNeighborPosHaveTile(FacingDirection))
-                    {
-                        //We have a ground tile in the direction we're going, so just keep walking.
+                        if (KeyDown(Keys.Right) || KeyDown(Keys.D))
+                        {
+                            NextDirection = Direction.Right;
+                        }
+                        if (KeyDown(Keys.Down) || KeyDown(Keys.S))
+                        {
+                            NextDirection = Direction.Down;
+                        }
+                        if (KeyDown(Keys.Up) || KeyDown(Keys.W))
+                        {
+                            NextDirection = Direction.Up;
+                        }
                     }
                     else
                     {
-                        if (AIType != AIType.Player)
+
+                        AiNextTurn -= dt;
+                        if (AiNextTurn <= 0)
                         {
-                            //AI hit a wall
-                            if (AIType == AIType.Wandering)
-                            {
-                                PickNewDirection();
+                            AiNextTurn = Globals.RandomInt(2000, 4000);
 
-                            }
-                            else if (AIType == AIType.BackNForth)
+                            PickNewDirection();
+                        }
+                    }
+
+                    //We are aligned with tile.
+                    if (CheckAlignedTile())
+                    {
+                        //Change to user direct
+                        ChangeDirection(dt);
+
+                        if (AlignActionsHaveRun == false)
+                        {
+                            //Set the last aligned tile pos - this is an escape check
+                            LastAlignTilePos = (World as World).RoundPosToTilePos(Pos);
+
+                            if (AIType == AIType.Player)
                             {
-                                //Lollygag back n forth
-                                if (FacingDirection == Direction.Left) { NextDirection = Direction.Right; }
-                                if (FacingDirection == Direction.Right) { NextDirection = Direction.Left; }
-                                if (FacingDirection == Direction.Up) { NextDirection = Direction.Down; }
-                                if (FacingDirection == Direction.Down) { NextDirection = Direction.Up; }
+                                CollidePiles();
                             }
 
-                            ChangeDirection(dt);
+                            AlignActionsHaveRun = true;
+                        }
+
+                        if (DoesNeighborPosHaveTile(FacingDirection))
+                        {
+                            //We have a ground tile in the direction we're going, so just keep walking.
                         }
                         else
                         {
+                            if (AIType != AIType.Player)
+                            {
+                                //AI hit a wall
+                                if (AIType == AIType.Wandering)
+                                {
+                                    PickNewDirection();
 
-                            //Player: player hit a wall
-                            Animate = false;
-                            Frame = this.Sprite.Frames[1];
+                                }
+                                else if (AIType == AIType.BackNForth)
+                                {
+                                    //Lollygag back n forth
+                                    if (FacingDirection == Direction.Left) { NextDirection = Direction.Right; }
+                                    if (FacingDirection == Direction.Right) { NextDirection = Direction.Left; }
+                                    if (FacingDirection == Direction.Up) { NextDirection = Direction.Down; }
+                                    if (FacingDirection == Direction.Down) { NextDirection = Direction.Up; }
+                                }
 
+                                ChangeDirection(dt);
+                            }
+                            else
+                            {
+
+                                //Player: player hit a wall
+                                Animate = false;
+                                Frame = this.Sprite.Frames[1];
+
+                            }
+
+                            //Very important to realign to the tile
+
+                            Vel = new vec2(0, 0);
+                            Pos = LastAlignTilePos * (World as World).Res.Tiles.TileWidthPixels;
                         }
 
-                        //Very important to realign to the tile
-
-                        Vel = new vec2(0, 0);
-                        Pos = LastAlignTilePos * (World as World).Res.Tiles.TileWidthPixels;
                     }
+                    else
+                    {
+                        AlignActionsHaveRun = false;
+                    }
+
+
+                    Pos += Vel;
+
 
                 }
                 else
                 {
-                    AlignActionsHaveRun = false;
+                    Stunned -= dt;
+                    if (Stunned <= 0)
+                    {
+                        Stunned = 0;
+
+                        SetSpriteForDir(dt, NextDirection);
+                    }
+                    else
+                    {
+                        Sprite sp = this.World.Res.Tiles.GetSprite(this.SpriteStun);
+                        if (Sprite != sp)
+                        {
+                            Animate = true;
+                            Sprite = sp;
+                        }
+                    }
+
                 }
 
-                Pos += Vel;
             }
         }
         private void PickNewDirection()
@@ -181,49 +210,45 @@ namespace Core
         }
         private void ChangeDirection(float dt)
         {
-            if (DeadTime <= 0.0001)
+            if (DoesNeighborPosHaveTile(NextDirection))
             {
-
-                if (DoesNeighborPosHaveTile(NextDirection))
-                {
-                    if (NextDirection == Direction.Left)
-                    {
-                        LastDirection = FacingDirection;
-                        FacingDirection = Direction.Left;
-                        Animate = true;
-                        Vel = new vec2(-speed, 0) * dt;
-                        Sprite = World.Res.Tiles.GetSprite(SpriteLeft);
-                    }
-                    else if (NextDirection == Direction.Right)
-                    {
-                        LastDirection = FacingDirection;
-                        FacingDirection = Direction.Right;
-                        Animate = true;
-                        Vel = new vec2(speed, 0) * dt;
-                        Sprite = World.Res.Tiles.GetSprite(SpriteRight);
-                    }
-                    else if (NextDirection == Direction.Up)
-                    {
-                        LastDirection = FacingDirection;
-                        FacingDirection = Direction.Up;
-                        Animate = true;
-                        Vel = new vec2(0, -speed) * dt;
-                        Sprite = World.Res.Tiles.GetSprite(SpriteUp);
-                    }
-                    else if (NextDirection == Direction.Down)
-                    {
-                        LastDirection = FacingDirection;
-                        FacingDirection = Direction.Down;
-                        Animate = true;
-                        Vel = new vec2(0, speed) * dt;
-                        Sprite = World.Res.Tiles.GetSprite(SpriteDown);
-                    }
-                }
+                SetSpriteForDir(dt, NextDirection);
             }
-            else
+
+        }
+        private void SetSpriteForDir(float dt, Direction d)
+        {
+            if (d == Direction.Left)
             {
-                Sprite = World.Res.Tiles.GetSprite(World.Res.SprDinoDead);
-                if(Sprite.Frames.Count>0) Frame = Sprite.Frames[0];
+                LastDirection = FacingDirection;
+                FacingDirection = Direction.Left;
+                Animate = true;
+                Vel = new vec2(-speed, 0) * dt;
+                Sprite = World.Res.Tiles.GetSprite(SpriteLeft);
+            }
+            else if (d == Direction.Right)
+            {
+                LastDirection = FacingDirection;
+                FacingDirection = Direction.Right;
+                Animate = true;
+                Vel = new vec2(speed, 0) * dt;
+                Sprite = World.Res.Tiles.GetSprite(SpriteRight);
+            }
+            else if (d == Direction.Up)
+            {
+                LastDirection = FacingDirection;
+                FacingDirection = Direction.Up;
+                Animate = true;
+                Vel = new vec2(0, -speed) * dt;
+                Sprite = World.Res.Tiles.GetSprite(SpriteUp);
+            }
+            else if (d == Direction.Down)
+            {
+                LastDirection = FacingDirection;
+                FacingDirection = Direction.Down;
+                Animate = true;
+                Vel = new vec2(0, speed) * dt;
+                Sprite = World.Res.Tiles.GetSprite(SpriteDown);
             }
         }
         private List<T> Permute<T>(List<T> stuff, int count)
@@ -299,7 +324,10 @@ namespace Core
                 if (pileUnderChar.Artifact != null)
                 {
                     World.FindArtifact(pileUnderChar.Artifact);
-                    Artifacts.Add(pileUnderChar.Artifact);
+                    if(pileUnderChar.Artifact.ArtifactType != ArtifactType.Pickaxe)
+                    {
+                        Artifacts.Add(pileUnderChar.Artifact);
+                    }
                 }
             }
 

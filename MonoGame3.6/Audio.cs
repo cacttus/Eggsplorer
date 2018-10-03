@@ -75,7 +75,9 @@ namespace Core
             if (s != null)
             {
                 SoundEffectInstance inst = s.CreateInstance();
+                inst.Volume = 1.0f;
                 inst.Play();
+                //s.Play(1.0f, 0.0f, 0.0f);
                 return inst;
             }
             return null;
