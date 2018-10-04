@@ -1,0 +1,8 @@
+{
+	"title": "Eggsplorer",
+	"slug": "eggsplorer",
+	"min_players": "1",
+	"max_players": "1",
+	"executable": "Eggsplorer.exe",
+	"image_url": "Title.png"
+}
