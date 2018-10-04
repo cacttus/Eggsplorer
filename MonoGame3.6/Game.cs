@@ -1125,7 +1125,7 @@ namespace Core
             GameData.Load();
 
             //TODO: reset this for winnitron derek 10/2/18
-            graphics.IsFullScreen = false;
+            graphics.IsFullScreen = bFullscreen;
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             graphics.ApplyChanges();
 
