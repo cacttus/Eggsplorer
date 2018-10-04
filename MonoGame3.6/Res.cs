@@ -70,6 +70,7 @@ namespace Core
         public string SfxPickaxeSwing = "PickaxeSwing";
         public string SfxGetPickaxe = "GetPickaxe";
         public string SfxHitGuy = "HitGuy";
+        public string SfxNewHighScore = "NewHighScore";
 
         public const float guySpeed = 0.6f;
 
@@ -162,6 +163,7 @@ namespace Core
                new Rectangle(4, 3, 1, 1),
                new Rectangle(5, 3, 1, 1)}, 0f);
 
+            Audio.Sounds.Add(Content.Load<SoundEffect>(SfxIntro));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxDie));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxGetItem));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxLevelComplete));
@@ -171,6 +173,7 @@ namespace Core
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxPickaxeSwing));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxHitGuy));
             Audio.Sounds.Add(Content.Load<SoundEffect>(SfxGetPickaxe));
+            Audio.Sounds.Add(Content.Load<SoundEffect>(SfxNewHighScore));
         }
 
         private void CharBlock12(ivec2 a, string u, string d, string l, string r)

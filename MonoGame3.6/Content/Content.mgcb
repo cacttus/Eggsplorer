@@ -81,7 +81,7 @@
 
 #begin Intro.ogg
 /importer:OggImporter
-/processor:SongProcessor
+/processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:Intro.ogg
 
@@ -157,4 +157,10 @@
 /processor:SoundEffectProcessor
 /processorParam:Quality=Best
 /build:PickaxeSwing.ogg
+
+#begin NewHighScore.ogg
+/importer:OggImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:NewHighScore.ogg
 

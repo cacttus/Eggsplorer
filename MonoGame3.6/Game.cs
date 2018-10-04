@@ -45,11 +45,16 @@ namespace Core
         public bool DrawPressAnyKey = false;
         public int Score = 0;
         public bool PickOut = false;
-        int NumArtifacts = 0;
-        int NumPickaxes = 0;
-        bool LevelCompletePlayed = false;
-        public GameObject Pick;
+        private int NumArtifacts = 0;
+        private int NumPickaxes = 0;
+        private bool LevelCompletePlayed = false;
+        private GameObject Pick;
         private int PickaxeUsage = 1;
+
+        class HighScore { public string Name; public int Score; }
+        private string HighScoreFilename = "HighScores.dat";
+        private List<HighScore> HighScores = new List<HighScore>();
+
 
         public World(Screen screen, Res res) : base(screen)
         {
@@ -92,7 +97,7 @@ namespace Core
             {
                 Res.Audio.PlaySound(Res.SfxGetPickaxe);
                 PickaxeUsage++;
-                CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.Gray, Color.SlateBlue});
+                CreateColoredParticles(Player.GetCenter(), new List<Color> { Color.Gray, Color.SlateBlue });
             }
             else
             {
@@ -119,7 +124,7 @@ namespace Core
 
         }
 
-        public void StartGame(int levelNumber, bool playIntro=false)
+        public void StartGame(int levelNumber, bool playIntro = false)
         {
             if (playIntro)
             {
@@ -157,7 +162,7 @@ namespace Core
 
             //Place Player in empty tile
             Tile found = null;
-            for(int i=0; i<5000; ++i)
+            for (int i = 0; i < 5000; ++i)
             {
                 Tile t = CaveGround[Globals.RandomInt(0, CaveGround.Count)];
                 if (t.Pile == null)
@@ -372,13 +377,13 @@ namespace Core
                 }
 
                 //Place bad guy
-                for(int n=0; n<5000; ++n)
+                for (int n = 0; n < 5000; ++n)
                 {
                     int a = Globals.RandomInt(0, CaveGround.Count);
                     b.Pos = CaveGround[a].Pos;
-                     
+
                     //Make sure we aren't too close to player
-                    if((b.Pos-Player.Pos).Len() > 24)
+                    if ((b.Pos - Player.Pos).Len() > 24)
                     {
                         break;
                     }
@@ -504,33 +509,43 @@ namespace Core
             {
                 Screen.DrawFrame(sb, Player.Frame, Player.Pos, spriteWh, Player.Color);
 
-                if (Player.Artifacts != null)
+                if (DrawGameOverText == false)
                 {
-                    int x = 0;
-                    foreach (Artifact artifact in Player.Artifacts)
+
+                    if (Player.Artifacts != null)
                     {
-                        DrawHudItem(sb, new vec2(x * 12, Screen.Viewport.HeightPixels - 12), new vec2(12, 12), artifact.SpriteName);
-                        x++;
+                        int x = 0;
+                        foreach (Artifact artifact in Player.Artifacts)
+                        {
+                            DrawHudItem(sb, new vec2(x * 12, Screen.Viewport.HeightPixels - 12), new vec2(12, 12), artifact.SpriteName);
+                            x++;
+                        }
                     }
                 }
+
             }
 
             if (PickOut)
             {
-                //float r = 0;//rotationradians
-                vec2 dp = new vec2(0, 0); //sprite origin relative to 12x12 sprite  and player
-                vec2 pickaxeOrigin = new vec2(6, 12);
-                PickaxePoint = new vec2(0, 0);
+                if (DrawGameOverText == false)
+                {
 
-                float a = ((PickOutTimerMax - PickOutTimer) / PickOutTimerMax) * 3.1415927f * 2;
-                vec2 playerOrigin = Player.Pos + new vec2(6, 6);
-                vec2 pickaxeNormal = new vec2((float)Math.Cos(a), (float)Math.Sin(a));
-                vec2 pickaxePos = playerOrigin + pickaxeNormal * 6.0f;
+                    //float r = 0;//rotationradians
+                    vec2 dp = new vec2(0, 0); //sprite origin relative to 12x12 sprite  and player
+                    vec2 pickaxeOrigin = new vec2(6, 12);
+                    PickaxePoint = new vec2(0, 0);
 
-                PickaxePoint = playerOrigin + pickaxeNormal * 13.0f;
+                    float a = ((PickOutTimerMax - PickOutTimer) / PickOutTimerMax) * 3.1415927f * 2;
+                    vec2 playerOrigin = Player.Pos + new vec2(6, 6);
+                    vec2 pickaxeNormal = new vec2((float)Math.Cos(a), (float)Math.Sin(a));
+                    vec2 pickaxePos = playerOrigin + pickaxeNormal * 6.0f;
 
-                Frame pa = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
-                Screen.DrawFrame(sb, pa, pickaxePos, spriteWh, Color.White, 1, 1, a + (3.1415927f*0.5f), pickaxeOrigin);
+                    PickaxePoint = playerOrigin + pickaxeNormal * 13.0f;
+
+                    Frame pa = Res.Tiles.GetSpriteFrame(Res.SprPickaxe, 0);
+                    Screen.DrawFrame(sb, pa, pickaxePos, spriteWh, Color.White, 1, 1, a + (3.1415927f * 0.5f), pickaxeOrigin);
+                }
+
             }
 
             if (DrawNothingButChar == false)
@@ -540,7 +555,7 @@ namespace Core
                 {
                     vec2 pos = Player.Pos;
 
-                    pos.y -= 5 + 12 * ((FoundArtifactMoveTimerMax-FoundArtifactMoveTimer) / FoundArtifactMoveTimerMax);
+                    pos.y -= 5 + 12 * ((FoundArtifactMoveTimerMax - FoundArtifactMoveTimer) / FoundArtifactMoveTimerMax);
 
                     Screen.DrawFrame(sb, FoundArtifact.Frame, FoundArtifact.Pos, spriteWh, FoundArtifact.Color);
                 }
@@ -626,11 +641,11 @@ namespace Core
                 float w = this.Screen.Game.GraphicsDevice.Viewport.Width;
                 float h = this.Screen.Game.GraphicsDevice.Viewport.Height;
                 float textx = w - w * 0.38f;
-                DrawStringHalo(sb, "Score:" +Score.ToString(), (int)textx, 1, Color.Fuchsia, Color.Yellow);
+                DrawStringHalo(sb, "Score:" + Score.ToString(), (int)textx, 1, Color.Fuchsia, Color.Yellow);
 
-                float paw = w - w * 0.08f ;
-                DrawHudItem(sb, new vec2(Screen.Viewport.WidthPixels - 22, Screen.Viewport.HeightPixels - 12), new vec2(12, 12), Res.SprPickaxe,0.5f);
-                DrawStringHalo(sb, "x" + PickaxeUsage.ToString(), (int)(paw), (int) h-32, Color.Blue, Color.Orange);
+                float paw = w - w * 0.08f;
+                DrawHudItem(sb, new vec2(Screen.Viewport.WidthPixels - 22, Screen.Viewport.HeightPixels - 12), new vec2(12, 12), Res.SprPickaxe, 0.5f);
+                DrawStringHalo(sb, "x" + PickaxeUsage.ToString(), (int)(paw), (int)h - 32, Color.Blue, Color.Orange);
             }
 
             if (GameState == GameState.GameOver)
@@ -638,25 +653,161 @@ namespace Core
                 if (DrawGameOverText == true)
                 {
                     vec2 pos = new vec2(), wh = new vec2();
-                    CenterHudItem(0.7f, 0.2f, ref pos, ref wh);
+                    CenterHudItem(0.7f, 0.17f, ref pos, ref wh);
 
-                    pos.y -= wh.y * 0.75f;//move the text so we can see the char
+                    pos.y -= wh.y * 0.99f;//move the text so we can see the char
 
                     DrawHudItem(sb, pos, wh, Res.SprHudGameOver);
+
+                    float w = this.Screen.Game.GraphicsDevice.Viewport.Width;
+                    float h = this.Screen.Game.GraphicsDevice.Viewport.Height;
+
                 }
                 if (DrawPressAnyKey == true)
                 {
                     vec2 pos = new vec2(), wh = new vec2();
-                    CenterHudItem(0.7f, 0.2f, ref pos, ref wh);
+                    CenterHudItem(0.7f, 0.17f, ref pos, ref wh);
 
-                    pos.y += wh.y * 0.75f;//move the text so we can see the char
 
+                    pos.y += wh.y * 0.24f;//move the text so we can see the char
                     DrawHudItem(sb, pos, wh, Res.SprHudPressAnyKey);
+
+                    DrawHighScores(sb);
+                }
+            }
+        }
+        private float NewHighScoreBlink = 0.5f;
+        private float NewHighScoreBlinkMax = 0.5f;
+        private bool NewHighScoreBlinkShow = false;
+        private void DrawHighScores(SpriteBatch sb)
+        {
+
+            float w = this.Screen.Game.GraphicsDevice.Viewport.Width;
+            float h = this.Screen.Game.GraphicsDevice.Viewport.Height;
+
+            int[] dx = new int[3];
+            int[] dy = new int[3];
+
+            dx[0] = (int)(w * 0.10f);
+            dx[1] = (int)(w * 0.40f);
+            dx[2] = (int)(w * 0.70f);
+            dy[0] = (int)(h * 0.71f);
+            dy[1] = (int)(h * 0.82f);
+            dy[2] = (int)(h * 0.93f);
+
+            if (NewHighScoreBlinkShow && newHighScoreIndex >= 0)
+            {
+                DrawStringHalo(sb, "New High Score! ", (int)(w * 0.28f), (int)(h * 0.63f), Color.Yellow, Color.Yellow);
+            }
+            else
+            {
+                DrawStringHalo(sb, "Top Scores", (int)(w * 0.33f), (int)(h * 0.63f), Color.Fuchsia, Color.Yellow);
+
+            }
+
+            for (int x = 0; x < 3; ++x)
+            {
+                for (int y = 0; y < 3; ++y)
+                {
+                    int ind = x * 3 + y;
+                    if (ind < HighScores.Count)
+                    {
+                        if (NewHighScoreBlinkShow && newHighScoreIndex >= 0 && newHighScoreIndex == ind)
+                        {
+                            DrawStringHalo(sb, HighScores[ind].Name + " " + HighScores[ind].Score, dx[x], dy[y], Color.Yellow , Color.Yellow);
+                        }
+                        else
+                        {
+                            DrawStringHalo(sb, HighScores[ind].Name + " " + HighScores[ind].Score, dx[x], dy[y], Color.Fuchsia, Color.Yellow);
+                        }
+
+                    }
                 }
             }
         }
 
-        public void CenterHudItem(float pctWidth, float pctHeight, ref vec2 pos, ref vec2 wh)
+        int newHighScoreIndex = -1;
+
+        private void ProcessHighScore()
+        {
+            LoadHighScores();
+            if (HighScores == null)
+            {
+                HighScores = new List<HighScore>();
+            }
+            HighScore hs = new HighScore();
+            try
+            {
+                string rs = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+                do
+                {
+                    hs.Name = "" + rs[Globals.RandomInt(0, rs.Length)]
+                        + rs[Globals.RandomInt(0, rs.Length)]
+                        + rs[Globals.RandomInt(0, rs.Length)];
+                }
+                while (hs.Name == "ASS" || hs.Name == "FUK");
+            }
+            catch (Exception ex)
+            {
+                hs.Name = "OOPS";
+            }
+            hs.Score = Score;
+
+            HighScores.Add(hs);
+
+            SortHighScores();
+
+            if (HighScores.Count > 9)
+            {
+                HighScores.RemoveAt(HighScores.Count - 1);
+            }
+
+            newHighScoreIndex = HighScores.IndexOf(hs);
+
+
+            SaveHighScores();
+        }
+        private void LoadHighScores()
+        {
+            HighScores = new List<HighScore>();
+
+            string highscores = "";
+            (Screen.Game.GameSystem as DesktopGameSystem).LoadData(HighScoreFilename, out highscores);
+
+            string[] pairs = highscores.Split('|');
+            foreach (string pair in pairs)
+            {
+                string[] fields = pair.Split(',');
+                if (fields.Length == 2)
+                {
+
+                    HighScore hs = new HighScore();
+                    hs.Name = fields[0];
+                    hs.Score = 0;
+                    Int32.TryParse(fields[1], out hs.Score);
+                    HighScores.Add(hs);
+                }
+
+            }
+            SortHighScores();
+        }
+        private void SaveHighScores()
+        {
+            string data = "";
+            string app = "";
+            foreach (HighScore hs in HighScores)
+            {
+                data += app + hs.Name + "," + hs.Score.ToString();
+                app = "|";
+            }
+
+            (Screen.Game.GameSystem as DesktopGameSystem).SaveData(HighScoreFilename, data);
+        }
+        private void SortHighScores()
+        {
+            HighScores.Sort((x, y) => y.Score.CompareTo(x.Score));
+        }
+        private void CenterHudItem(float pctWidth, float pctHeight, ref vec2 pos, ref vec2 wh)
         {
             pos = new vec2();
             wh = new vec2();
@@ -722,7 +873,7 @@ namespace Core
                         //Player Die
                         if (g.CollidesWith(Player))
                         {
-                            if(g.Stunned <= 0)
+                            if (g.Stunned <= 0)
                             {
                                 vec2 pos = g.GetCenter() + (Player.GetCenter() - g.GetCenter()) * 0.5f;
                                 CreateColoredParticles(pos, new List<Color> { Color.Red, Color.IndianRed, Color.HotPink });
@@ -747,6 +898,15 @@ namespace Core
 
                     }
                 }
+                else if (GameState == GameState.GameOver)
+                {
+                    NewHighScoreBlink -= dt;
+                    if (NewHighScoreBlink <= 0)
+                    {
+                        NewHighScoreBlink = NewHighScoreBlinkMax;
+                        NewHighScoreBlinkShow = !NewHighScoreBlinkShow;
+                    }
+                }
             }
 
             ScreenShake.Update(dt);
@@ -764,6 +924,10 @@ namespace Core
             Player.Loop = false;
             DrawNothingButChar = true;
             Res.Audio.PlaySound(Res.SfxDie);
+
+            ProcessHighScore();
+
+
         }
 
         public float PickOutTimer = 0.3f;
@@ -828,13 +992,13 @@ namespace Core
 
                 }
                 PickOutTimer -= dt;
-                if(PickOutTimer <= 0)
+                if (PickOutTimer <= 0)
                 {
                     PickOutTimer = 0;
                     PickOut = false;
                 }
                 PickOutDelay -= dt;
-                if(PickOutDelay <= 0)
+                if (PickOutDelay <= 0)
                 {
                     PickOutDelay = 0;
                 }
@@ -857,7 +1021,14 @@ namespace Core
                 if (GameOverTimer <= 0)
                 {
                     GameOverTimer = 0;
-                    DrawPressAnyKey = true;
+                    if (DrawPressAnyKey == false)
+                    {
+                        DrawPressAnyKey = true;
+                        if (newHighScoreIndex >= 0)
+                        {
+                            Res.Audio.PlaySound(Res.SfxNewHighScore);
+                        }
+                    }
                 }
                 if (DrawPressAnyKey)
                 {
@@ -954,7 +1125,7 @@ namespace Core
             GameData.Load();
 
             //TODO: reset this for winnitron derek 10/2/18
-            graphics.IsFullScreen =  false;
+            graphics.IsFullScreen = false;
             graphics.SupportedOrientations = DisplayOrientation.LandscapeLeft | DisplayOrientation.LandscapeRight;
             graphics.ApplyChanges();
 
